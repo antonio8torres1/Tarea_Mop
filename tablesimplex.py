@@ -68,7 +68,7 @@ class TableSimplex:
                 colum_temp = self.matrix[:,index_colum_min]       
                 colum_divide = self.ld[1:] / colum_temp
                 
-                index_row_min = colum_divide[colum_divide > 0].argmin() # indicce de la fila de restricion
+                index_row_min = np.where(colum_divide > 0)[0][colum_divide[colum_divide > 0].argmin()] # indicce de la fila de restricion
                 self.ld[index_row_min + 1] /= self.matrix[index_row_min,index_colum_min]
                 self.matrix[index_row_min] /= self.matrix[index_row_min,index_colum_min]
                 
