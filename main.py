@@ -1,9 +1,9 @@
 import streamlit as st
 from numpy import array
 from simplex_m import Simplex
+from tablesimplex import TableSimplex
 
 def main():
-<<<<<<< HEAD
     
     matrix = [
         [-5, -6, 0, 0, 0, 0,0],
@@ -29,7 +29,7 @@ def main():
 
     print(table)
     print(f"# de Iteraciones: {n}")
-=======
+
     z = array([-1.6, -1.4, 0, 0, 0], dtype=float)
     matrix = array([
         [10, 20, 1, 0, 0],
@@ -53,7 +53,6 @@ def main():
 
     st.subheader("Resultado óptimo")
     st.write("Iteraciones:", n)
->>>>>>> 67e52c71abc8c6119dcf77dc2c92de0d33b1ee4f
 
 if __name__ == "__main__":
     main()
