@@ -80,14 +80,12 @@ class Simplex:
         a = self.matrix[0,:-1,0]
         b = self.matrix[0,:-1,1]
         
-        print(self.matrix[0,:-1,0].max())
-        print(self.matrix[0,:-1,1].max())
         while (np.any(a > 0) or (np.all(a == 0) and np.any(b > 0))):
+
             #Variable de salida
             values_m = self.matrix[0,:-1,0]
             values_co = self.matrix[0,:-1,1]
         
-            print(values_m,values_co)
             index_min_colum = where(values_m[:-1] > 0)[0]
 
             if len(index_min_colum) > 1:
@@ -102,15 +100,11 @@ class Simplex:
             #Dividir la fila
             self.matrix[index_min_row + 1,:,1] /= self.matrix[index_min_row + 1,index_min_colum,1]
             
-            print(self.matrix[0,0,0], self.matrix[index_min_row + 1,index_min_colum,0])
-            print(self.matrix[0,0,1],self.matrix[index_min_row + 1,index_min_colum,1])
             #Cero la columna
-
             for i in range(height):
                 fm_pv = self.matrix[i,index_min_colum,0] * (-1)
                 fc_pv = self.matrix[i,index_min_colum,1] * (-1)
                 for j in range(width):
-                    
                     if i == index_min_row + 1:
                         continue
                     if i == 0:
@@ -119,17 +113,10 @@ class Simplex:
                     else:
                         self.matrix[i,j,1] += self.matrix[index_min_row + 1,j,1] * fc_pv
                         
-                        
-
-            
             iterations += 1
-            print("SI")
             
-
         return iterations
 
-                
-    
     def table_pandas(self):
         """
         Representa en forma de un DataFrame de pandas los valores de la tabla sin el valor de M
