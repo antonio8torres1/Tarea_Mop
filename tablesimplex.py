@@ -1,8 +1,7 @@
 import numpy as np
 
 class TableSimplex:
-    
-    def __init__(self, z, restriccion,ld,header, vb,option):
+    def __init__(self, z, restriccion, ld, header, vb, option):
         self.row_z = z
         self.matrix = restriccion
         self.ld = ld
@@ -17,19 +16,16 @@ class TableSimplex:
         leap = (width + 6)*4
         num_row = 0
 
-        
         table += "\t\t TABLE"
         table += "\n" + "-"*leap +"\n"
-        
+
         for i in range(height):
-            
             if i > 0:
                 table += "| " + self.vb[i - 1] + " "
             else:
                 table += "| " + "VB"
 
             for j in range(width):
-                
                 if i == 0:
                     table += " |  " + str(self.header[j])
                     if j == width - 1:
@@ -44,7 +40,7 @@ class TableSimplex:
                         table += "|  " + str(np.round(self.matrix[num_row,j],1)) + "  "
                     if self.matrix[num_row][j] < 0:
                         table += "| " + str(np.round(self.matrix[num_row,j],1)) + "  "
-            
+
             if i > 1:
                 num_row += 1
             if i > 0 and i < height:
@@ -54,7 +50,22 @@ class TableSimplex:
                     table += "|  " + str(np.round(self.ld[i - 1],1))
 
             table += "\n"
+        return table
 
+    def as_matrix(self):
+        """
+        Devuelve la tabla simplex como una lista de listas para mostrar en Streamlit.
+        """
+        table = []
+        # Primera fila: encabezados + LD
+        table.append(self.header + ["LD"])
+        # Fila Z
+        row_z = [np.round(x, 2) for x in self.row_z] + [np.round(self.ld[0], 2)]
+        table.append(row_z)
+        # Restricciones
+        for i in range(self.matrix.shape[0]):
+            row = [np.round(x, 2) for x in self.matrix[i]] + [np.round(self.ld[i+1], 2)]
+            table.append(row)
         return table
 
     def solve(self):
@@ -86,9 +97,6 @@ class TableSimplex:
                 iterations+=1
 
             return iterations
- 
-
-
 
     def tablepandas():
         pass
