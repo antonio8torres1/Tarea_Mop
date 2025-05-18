@@ -13,7 +13,7 @@ class TableSimplex:
     def __str__(self):
         table = ""
         height = len(self.ld) + 1
-        width = len(self.vb) + 1
+        width = len(self.row_z)
         leap = (width + 6)*4
         num_row = 0
 
