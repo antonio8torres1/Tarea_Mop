@@ -61,7 +61,8 @@ class Simplex:
                 self.matrix[i, j, 1] = matrix[i][j]
 
         index_positions = [where(self.header == p) for p in self.header if "A" in p]
-
+        print(self.matrix)
+        print(index_positions)
         if self.opts == 0:
             for i in index_positions:
                 self.matrix[0, i, 0] = -1

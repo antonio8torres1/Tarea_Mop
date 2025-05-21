@@ -11,6 +11,31 @@ from streamlit import (
 )
 from simplex_m import Simplex
 
+
+def get_header(list_op: list):
+    header = [f"X{i + 1}" for i in range(session_state.config["num_variables"])]
+    basic_values = ["Z"]
+    h = {}
+    a = {}
+
+    for i in range(len(list_op)):
+        if list_op[i] == "<":
+            h[i + 1] = f"H{i + 1}"
+            basic_values.append(f"H{i + 1}")
+        elif list_op[i] == ">":
+            h[i + 1] = f"H{i + 1}"
+            a[i + 1] = f"A{i + 1}"
+            basic_values.append(f"A{i + 1}")
+        else:
+            a[i + 1] = f"A{i + 1}"
+            basic_values.append(f"A{i + 1}")
+
+    header += list(h.values())
+    header += list(a.values())
+    return header, basic_values
+
+
+
 st.set_page_config(layout="wide")
 
 if "config" not in session_state:
@@ -60,12 +85,11 @@ with container():
                 else:
                     st.text_input(f"X{j + 1}", key=f"r{i}_{j}")
 
-    if button("Resolver"):
-        session_state.config_table["state"] = True
-
 
 with container():
-    if session_state.config_table["state"]:
+    if button("Resolver"):
+        #   session_state.config_table["state"] = True
+        # if session_state.config_table["state"]:
         session_state.config_table["table"].clear()
         opt_list = []
 
@@ -88,7 +112,7 @@ with container():
                         row.append(value)
                     else:
                         key = f"r{i - 1}_{j}"
-                        value = session_state.get(key,"")
+                        value = session_state.get(key, "")
                         row.append(value)
 
             session_state.config_table["table"].append(row)
@@ -98,28 +122,30 @@ with container():
             opt_list.append(val)
 
         write(opt_list)
+        header , vb = get_header(opt_list[:-1])
 
-    header = ["X1", "X2", "H1", "H2", "A1", "A2"]
-    ld = ["Z", "A1", "A2"]
+        write(header)
+        write(vb)
+        write(session_state.config_table["table"])
+        # header = ["X1", "X2", "H1", "H2", "A1", "A2"]
+        # ld = ["Z", "A1", "A2"]
 
-    row = session_state.config["num_equations"] + 1
-    colum = session_state.config["num_variables"] + 1
+        row = session_state.config["num_equations"] + 1
+        colum = session_state.config["num_variables"] + 1
 
-    table = Simplex(row,colum,opts = 0)
+        table = Simplex(row, colum, opts=0)
 
-    table.initialize(session_state.config_table["table"],header,ld)
+        table.initialize(session_state.config_table["table"], header, vb)
 
-    write("### Tabla inicial")
-    data , tabl = table.table_pandas()
-    st.dataframe(data)
+        write("### Tabla inicial")
+        data, tabl = table.table_pandas()
+        st.dataframe(data)
 
-    write("### Solucion")
-    n = table.solve()
-    write(f"Numero de iteraciones: {n}")
-    
+        write("### Solucion")
+        n = table.solve()
+        write(f"Numero de iteraciones: {n}")
 
-    write("### Iteracion final")
-    data , tabl = table.table_pandas()
-    st.dataframe(data)
-
-    session_state.config_table["state"] = False
+        write("### Iteracion final")
+        data, tabl = table.table_pandas()
+        st.dataframe(data)
+        session_state.config_table["state"] = False
