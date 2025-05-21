@@ -21,7 +21,11 @@ if "config" not in session_state:
         "options": ["Maximizar", "Minimizar"],
     }
 if "config_table" not in session_state:
-    session_state.config_table = {"state": False, "opts_equations": ["<", ">", "="]}
+    session_state.config_table = {
+        "state": False,
+        "opts_equations": ["<", ">", "="],
+        "table": [],
+    }
 
 title("Calculadora Metodo Simplex")
 
@@ -43,52 +47,79 @@ with container():
             st.text_input(f"X{i + 1}", key=f"z{i}")
 
     write("### Restricciones")
-    for j in range(session_state.config["num_equations"]):
+    for i in range(session_state.config["num_equations"]):
         cols = columns(session_state.config["num_variables"] + 2)
-        for i, col in enumerate(cols):
+        for j, col in enumerate(cols):
             with col:
-                if i == session_state.config["num_variables"]:
+                if j == session_state.config["num_variables"]:
                     st.selectbox(
-                        "", session_state.config_table["opts_equations"], key=f"op{j}"
+                        "", session_state.config_table["opts_equations"], key=f"op{i}"
                     )
-                elif i == session_state.config["num_variables"] + 1:
-                    st.text_input("LD", key=f"ld{j}")
+                elif j == session_state.config["num_variables"] + 1:
+                    st.text_input("LD", key=f"ld{i}")
                 else:
-                    st.text_input(f"X{i + 1}", key=f"r{i}_{j}")
-
-    matrix_coef = []
-    opt_list = []
-    z_colum = []
-
-    for j in range(session_state.config["num_equations"]):
-        row = []
-
-        for i in range(session_state.config["num_variables"] + 1):
-            if i == session_state.config["num_variables"]:
-                ld_key = f"ld{j}"
-                val = session_state.get(ld_key, "")
-                row.append(val)
-            else:
-                key = f"r{i}_{j}"
-                val = session_state.get(key, "")
-                row.append(val)
-
-        matrix_coef.append(row)
-
-        key_opt = f"op{j}"
-        val = session_state.get(key_opt, "")
-        opt_list.append(val)
+                    st.text_input(f"X{j + 1}", key=f"r{i}_{j}")
 
     if button("Resolver"):
         session_state.config_table["state"] = True
 
 
 with container():
+    if session_state.config_table["state"]:
+        session_state.config_table["table"].clear()
+        opt_list = []
 
-    header = ["X1","X2","H1","H2","A1","A2"]
-    ld = ["Z","A1","A2"]
+        # Extraer datos
+        for i in range(session_state.config["num_equations"] + 1):
+            row = []
+
+            for j in range(session_state.config["num_variables"] + 1):
+                if i == 0:
+                    if j == session_state.config["num_variables"]:
+                        row.append(0)
+                    else:
+                        key = f"z{j}"
+                        value = session_state.get(key, "")
+                        row.append(value)
+                else:
+                    if j == session_state.config["num_variables"]:
+                        key = f"ld{i - 1}"
+                        value = session_state.get(key, "")
+                        row.append(value)
+                    else:
+                        key = f"r{i - 1}_{j}"
+                        value = session_state.get(key,"")
+                        row.append(value)
+
+            session_state.config_table["table"].append(row)
+
+            key_opt = f"op{i}"
+            val = session_state.get(key_opt, "")
+            opt_list.append(val)
+
+        write(opt_list)
+
+    header = ["X1", "X2", "H1", "H2", "A1", "A2"]
+    ld = ["Z", "A1", "A2"]
+
+    row = session_state.config["num_equations"] + 1
+    colum = session_state.config["num_variables"] + 1
+
+    table = Simplex(row,colum,opts = 0)
+
+    table.initialize(session_state.config_table["table"],header,ld)
+
     write("### Tabla inicial")
-    
+    data , tabl = table.table_pandas()
+    st.dataframe(data)
+
     write("### Solucion")
+    n = table.solve()
+    write(f"Numero de iteraciones: {n}")
+    
 
     write("### Iteracion final")
+    data , tabl = table.table_pandas()
+    st.dataframe(data)
+
+    session_state.config_table["state"] = False
