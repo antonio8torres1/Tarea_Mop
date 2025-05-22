@@ -131,7 +131,11 @@ with container():
         # ld = ["Z", "A1", "A2"]
 
         row = session_state.config["num_equations"] + 1
-        colum = session_state.config["num_variables"] + 1
+        colum = len(header) 
+
+        write(row)
+        write(len(vb))
+        write(colum)
 
         table = Simplex(row, colum, opts=0)
 
