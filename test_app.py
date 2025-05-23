@@ -141,7 +141,7 @@ with container():
         write("#### Numero de iteraciones: ", n)
 
         for p, v in s:
-            write(" ##### ", p, " : ", v)
+            write(" ##### ", p, " : ", round(v, 2))
 
         write("### Iteracion final")
         data, tabl = table.table_pandas()

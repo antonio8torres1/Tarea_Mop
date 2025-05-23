@@ -1,6 +1,17 @@
 import enum
 import numpy as np
-from numpy import array, zeros, where, argmin, argmax, min, max, round, count_nonzero
+from numpy import (
+    array,
+    iterable,
+    zeros,
+    where,
+    argmin,
+    argmax,
+    min,
+    max,
+    round,
+    count_nonzero,
+)
 import pandas as pd
 
 
@@ -66,13 +77,19 @@ class Simplex:
                     self.matrix[i, j, 1] = float(matrix[i][j])
             self.matrix[i, -1, 1] = float(matrix[i][-1])
 
-        # Obtener los indices de las filas con A y H
+        # Obtener los indices de las Columna con A y H
         a_colum = [i for i, p in enumerate(self.header) if "A" in p]
         h_colum = [i for i, p in enumerate(self.header) if "H" in p]
 
-        # Obtener los indices de las columnas con A y H
+        # Obtener los indices de las filas con A y H
         a_row = [i for i, p in enumerate(self.basic_variables) if "A" in p]
         h_row = [i for i, p in enumerate(self.basic_variables) if "H" in p]
+
+        # obener los valores de ecuacion header
+        h_colum_value_coef = [p[1] for i, p in enumerate(self.header) if "H" in p]
+
+        # Obtener los valores de ecuacion basic_variables
+        row_values_coef = [p[1] for i, p in enumerate(self.basic_variables[1:])]
 
         # Primera coincidiencia obligatoria donde A/A
         for i in a_row:
@@ -81,15 +98,13 @@ class Simplex:
                     self.matrix[i, j, 1] = 1
 
         # Asignacion don de H/A
-        count_h = 0
-        count_a = 0
-        for i in h_colum:
-            if count_h < len(h_row):
-                self.matrix[h_row[count_h], i, 1] = 1
-                count_h += 1
-            else:
-                self.matrix[a_row[count_a], i, 1] = -1
-                count_a += 1
+        for i in range(len(h_colum)):
+            for j in range(len(self.basic_variables[1:])):
+                if h_colum_value_coef[i] == row_values_coef[j]:
+                    if "H" in self.basic_variables[j + 1]:
+                        self.matrix[j + 1, h_colum[i], 1] = 1
+                    else:
+                        self.matrix[j + 1, h_colum[i], 1] = -1
 
         # Asignacion de M primera fila(Z)
         if self.opts == 0:
@@ -113,7 +128,7 @@ class Simplex:
         a = self.matrix[0, :-1, 0]
         b = self.matrix[0, :-1, 1]
 
-        # return iterations
+        # return iterations, [("TT", 0)]
         while np.any(a > 0) or (np.all(a == 0) and np.any(b > 0)):
             # Variable de entrada
             values_m = self.matrix[0, :-1, 0]
@@ -142,8 +157,8 @@ class Simplex:
                 self.matrix[1:, width - 1, 1] / self.matrix[1:, index_min_colum, 1]
             )
 
-            index_min_row = where(values_divide > 0)[0][
-                values_divide[values_divide > 0].argmin()
+            index_min_row = where(values_divide >= 0)[0][
+                values_divide[values_divide >= 0].argmin()
             ]
 
             # Correcion basic_variables
@@ -174,9 +189,8 @@ class Simplex:
                         )
 
             iterations += 1
-
             if iterations >= 100:
-                return iterations, ("", 0)
+                return iterations, [("TT", 0)]
 
         index_x = [(i, p) for i, p in enumerate(self.basic_variables) if "X" in p]
         solutions = [(p, self.matrix[i, -1, 1]) for i, p in index_x]
@@ -189,32 +203,32 @@ class Simplex:
         """
         height = len(self.matrix)
         width = len(self.matrix[0])
-        table = zeros((height, width), dtype="U10")
+        table = zeros((height, width), dtype="U30")
 
         for i in range(height):
             for j in range(width):
                 if i == 0:
-                    if self.matrix[i, j, 0] == 0:
-                        table[i, j] = str(self.matrix[i, j, 1])
+                    if np.isclose(self.matrix[i, j, 0], 0):
+                        table[i, j] = str(round(self.matrix[i, j, 1], 2))
                     else:
-                        if self.matrix[i, j, 1] == 0:
-                            table[i, j] = str(self.matrix[i, j, 0]) + "M"
-                        elif self.matrix[i, j, 1] > 0:
+                        if np.isclose(self.matrix[i, j, 1], 0):
+                            table[i, j] = str(round(self.matrix[i, j, 0], 2)) + "M"
+                        elif self.matrix[i, j, 1] > 0.0:
                             table[i, j] = (
-                                str(self.matrix[i, j, 0])
+                                str(round(self.matrix[i, j, 0], 2))
                                 + "M"
                                 + " + "
-                                + str(self.matrix[i, j, 1])
+                                + str(round(self.matrix[i, j, 1], 2))
                             )
                         else:
                             table[i, j] = (
-                                str(self.matrix[i, j, 0])
+                                str(round(self.matrix[i, j, 0], 2))
                                 + "M "
-                                + str(self.matrix[i, j, 1])
+                                + str(round(self.matrix[i, j, 1], 2))
                             )
 
                 else:
-                    table[i, j] = str(self.matrix[i, j, 1])
+                    table[i, j] = str(round(self.matrix[i, j, 1], 2))
 
         header = list(self.header) + ["LD"]
         vb = list(self.basic_variables)
