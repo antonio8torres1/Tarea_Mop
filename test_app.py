@@ -35,7 +35,6 @@ def get_header(list_op: list):
     return header, basic_values
 
 
-
 st.set_page_config(layout="wide")
 
 if "config" not in session_state:
@@ -121,21 +120,13 @@ with container():
             val = session_state.get(key_opt, "")
             opt_list.append(val)
 
-        write(opt_list)
-        header , vb = get_header(opt_list[:-1])
+        header, vb = get_header(opt_list[:-1])
 
-        write(header)
-        write(vb)
-        write(session_state.config_table["table"])
         # header = ["X1", "X2", "H1", "H2", "A1", "A2"]
         # ld = ["Z", "A1", "A2"]
 
         row = session_state.config["num_equations"] + 1
-        colum = len(header) 
-
-        write(row)
-        write(len(vb))
-        write(colum)
+        colum = len(header) + 1
 
         table = Simplex(row, colum, opts=0)
 
@@ -146,8 +137,11 @@ with container():
         st.dataframe(data)
 
         write("### Solucion")
-        n = table.solve()
-        write(f"Numero de iteraciones: {n}")
+        n, s = table.solve()
+        write("#### Numero de iteraciones: ", n)
+
+        for p, v in s:
+            write(" ##### ", p, " : ", v)
 
         write("### Iteracion final")
         data, tabl = table.table_pandas()
