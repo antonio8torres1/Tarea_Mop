@@ -122,13 +122,13 @@ with container():
 
         header, vb = get_header(opt_list[:-1])
 
-        # header = ["X1", "X2", "H1", "H2", "A1", "A2"]
-        # ld = ["Z", "A1", "A2"]
+        # Opcion Max/Min
+        target = 1 if session_state.config["target"] == "Maximizar" else 0
 
         row = session_state.config["num_equations"] + 1
         colum = len(header) + 1
 
-        table = Simplex(row, colum, opts=0)
+        table = Simplex(row, colum, opts=target)
 
         table.initialize(session_state.config_table["table"], header, vb)
 
