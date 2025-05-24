@@ -35,7 +35,7 @@ def get_header(list_op: list):
     return header, basic_values
 
 
-st.set_page_config(layout="wide")
+st.set_page_config(layout="wide", page_title="Simplex Method", page_icon="🚀")
 
 if "config" not in session_state:
     session_state.config = {
