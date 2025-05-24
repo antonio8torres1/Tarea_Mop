@@ -1,0 +1,14 @@
+[server]
+headless = true
+runOnSave = true
+port = 8501
+
+[browser]
+openBrowser = false
+gatherUsageStats = false 
+serverAddress = "localhost"
+serverPort = 8501
+
+[theme]
+base = "light"
+font = "sans serif"
