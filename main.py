@@ -124,7 +124,6 @@ with container():
 
         # Opcion Max/Min
         target = 1 if session_state.config["target"] == "Maximizar" else 0
-        write(target)
 
         row = session_state.config["num_equations"] + 1
         colum = len(header) + 1
