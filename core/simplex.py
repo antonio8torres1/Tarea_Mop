@@ -1,16 +1,9 @@
-import enum
 import numpy as np
 from numpy import (
     array,
-    iterable,
     zeros,
     where,
-    argmin,
-    argmax,
-    min,
-    max,
     round,
-    count_nonzero,
 )
 import pandas as pd
 
@@ -106,91 +99,154 @@ class Simplex:
                     else:
                         self.matrix[j + 1, h_colum[i], 1] = -1
 
-        # Asignacion de M primera fila(Z)
-        if self.opts == 0:
+            # Asignacion de M primera fila(Z)
             for i in a_colum:
-                self.matrix[0, i, 0] = -1
+                self.matrix[0, i, 0] = -1 if self.opts == 0 else 1
 
     def solve(self):
         height = len(self.matrix)
         width = len(self.matrix[0])
-        row_z = self.matrix[0, :, 1]
         iterations = 0
 
         # Iteracion previa
-        # for i in range(1, height):
-        #   for j in range(width):
-        #       self.matrix[0, j, 0] += self.matrix[i, j, 1]
         a_row = [i for i, p in enumerate(self.basic_variables) if "A" in p]
         for i in a_row:
-            self.matrix[0, :, 0] += self.matrix[i, :, 1]
+            if self.opts == 0:
+                self.matrix[0, :, 0] += self.matrix[i, :, 1]
+            else:
+                self.matrix[0, :, 0] += self.matrix[i, :, 1] * (-1)
 
         a = self.matrix[0, :-1, 0]
         b = self.matrix[0, :-1, 1]
 
-        # return iterations, [("TT", 0)]
-        while np.any(a > 0) or (np.all(a == 0) and np.any(b > 0)):
-            # Variable de entrada
-            values_m = self.matrix[0, :-1, 0]
-            values_co = self.matrix[0, :-1, 1]
+        if self.opts == 0:
+            # return iterations, [("TT", 0)]
+            while np.any(a > 0) or (np.all(a == 0) and np.any(b > 0)):
+                # Variable de entrada
+                values_m = self.matrix[0, :-1, 0]
+                values_co = self.matrix[0, :-1, 1]
 
-            index_min_colum = where(values_m[:-1] > 0)[0]
-            index_min_colum_co = where(values_co[:-1] > 0)[0]
+                index_min_colum = where(values_m[:-1] > 0)[0]
+                index_min_colum_co = where(values_co[:-1] > 0)[0]
 
-            if len(index_min_colum) == 0:
-                if len(index_min_colum_co) == 1:
-                    index_min_colum = index_min_colum_co[0]
-                else:
-                    index_min_colum = where(values_co > 0)[0][
-                        values_co[values_co > 0].argmax()
-                    ]
-            else:
-                if len(index_min_colum) == 1:
-                    index_min_colum = index_min_colum[0]
-                else:
-                    index_min_colum = where(values_m > 0)[0][
-                        values_m[values_m > 0].argmax()
-                    ]
-
-            # Variable de Salida
-            values_divide = (
-                self.matrix[1:, width - 1, 1] / self.matrix[1:, index_min_colum, 1]
-            )
-
-            index_min_row = where(values_divide >= 0)[0][
-                values_divide[values_divide >= 0].argmin()
-            ]
-
-            # Correcion basic_variables
-            self.basic_variables[index_min_row + 1] = self.header[index_min_colum]
-
-            # Dividir la fila
-            self.matrix[index_min_row + 1, :, 1] /= self.matrix[
-                index_min_row + 1, index_min_colum, 1
-            ]
-
-            # Cero la columna
-            for i in range(height):
-                fm_pv = self.matrix[i, index_min_colum, 0] * (-1)
-                fc_pv = self.matrix[i, index_min_colum, 1] * (-1)
-                for j in range(width):
-                    if i == index_min_row + 1:
-                        continue
-                    if i == 0:
-                        self.matrix[i, j, 0] += self.matrix[index_min_row + 1, j, 0] + (
-                            self.matrix[index_min_row + 1, j, 1] * fm_pv
-                        )
-                        self.matrix[i, j, 1] += (
-                            self.matrix[index_min_row + 1, j, 1] * fc_pv
-                        )
+                if len(index_min_colum) == 0:
+                    if len(index_min_colum_co) == 1:
+                        index_min_colum = index_min_colum_co[0]
                     else:
-                        self.matrix[i, j, 1] += (
-                            self.matrix[index_min_row + 1, j, 1] * fc_pv
-                        )
+                        index_min_colum = where(values_co > 0)[0][
+                            values_co[values_co > 0].argmax()
+                        ]
+                else:
+                    if len(index_min_colum) == 1:
+                        index_min_colum = index_min_colum[0]
+                    else:
+                        index_min_colum = where(values_m > 0)[0][
+                            values_m[values_m > 0].argmax()
+                        ]
 
-            iterations += 1
-            if iterations >= 100:
-                return iterations, [("TT", 0)]
+                # Variable de Salida
+                values_divide = (
+                    self.matrix[1:, width - 1, 1] / self.matrix[1:, index_min_colum, 1]
+                )
+
+                index_min_row = where(values_divide >= 0)[0][
+                    values_divide[values_divide >= 0].argmin()
+                ]
+
+                # Correcion basic_variables
+                self.basic_variables[index_min_row + 1] = self.header[index_min_colum]
+
+                # Dividir la fila
+                self.matrix[index_min_row + 1, :, 1] /= self.matrix[
+                    index_min_row + 1, index_min_colum, 1
+                ]
+
+                # Cero la columna
+                for i in range(height):
+                    fm_pv = self.matrix[i, index_min_colum, 0] * (-1)
+                    fc_pv = self.matrix[i, index_min_colum, 1] * (-1)
+                    for j in range(width):
+                        if i == index_min_row + 1:
+                            continue
+                        if i == 0:
+                            self.matrix[i, j, 0] += self.matrix[
+                                index_min_row + 1, j, 0
+                            ] + (self.matrix[index_min_row + 1, j, 1] * fm_pv)
+                            self.matrix[i, j, 1] += (
+                                self.matrix[index_min_row + 1, j, 1] * fc_pv
+                            )
+                        else:
+                            self.matrix[i, j, 1] += (
+                                self.matrix[index_min_row + 1, j, 1] * fc_pv
+                            )
+
+                iterations += 1
+                if iterations >= 100:
+                    return iterations, [("TT", 0)]
+        else:
+            # return iterations, [("TT", 0)]
+            while np.any(a < 0) or (np.all(a == 0) and np.any(b < 0)):
+                # Variable de entrada
+                values_m = self.matrix[0, :-1, 0]
+                values_co = self.matrix[0, :-1, 1]
+
+                index_min_colum = where(values_m[:-1] < 0)[0]
+                index_min_colum_co = where(values_co[:-1] < 0)[0]
+
+                if len(index_min_colum) == 0:
+                    if len(index_min_colum_co) == 1:
+                        index_min_colum = index_min_colum_co[0]
+                    else:
+                        index_min_colum = where(values_co < 0)[0][
+                            values_co[values_co > 0].argmin()
+                        ]
+                else:
+                    if len(index_min_colum) == 1:
+                        index_min_colum = index_min_colum[0]
+                    else:
+                        index_min_colum = where(values_m < 0)[0][
+                            values_m[values_m > 0].argmin()
+                        ]
+
+                # Variable de Salida
+                values_divide = (
+                    self.matrix[1:, width - 1, 1] / self.matrix[1:, index_min_colum, 1]
+                )
+
+                index_min_row = where(values_divide >= 0)[0][
+                    values_divide[values_divide >= 0].argmin()
+                ]
+
+                # Correcion basic_variables
+                self.basic_variables[index_min_row + 1] = self.header[index_min_colum]
+
+                # Dividir la fila
+                self.matrix[index_min_row + 1, :, 1] /= self.matrix[
+                    index_min_row + 1, index_min_colum, 1
+                ]
+
+                # Cero la columna
+                for i in range(height):
+                    fm_pv = self.matrix[i, index_min_colum, 0] * (-1)
+                    fc_pv = self.matrix[i, index_min_colum, 1] * (-1)
+                    for j in range(width):
+                        if i == index_min_row + 1:
+                            continue
+                        if i == 0:
+                            self.matrix[i, j, 0] += self.matrix[
+                                index_min_row + 1, j, 0
+                            ] + (self.matrix[index_min_row + 1, j, 1] * fm_pv)
+                            self.matrix[i, j, 1] += (
+                                self.matrix[index_min_row + 1, j, 1] * fc_pv
+                            )
+                        else:
+                            self.matrix[i, j, 1] += (
+                                self.matrix[index_min_row + 1, j, 1] * fc_pv
+                            )
+
+                iterations += 1
+                if iterations >= 100:
+                    return iterations, [("TT", 0)]
 
         index_x = [(i, p) for i, p in enumerate(self.basic_variables) if "X" in p]
         solutions = [(p, self.matrix[i, -1, 1]) for i, p in index_x]
