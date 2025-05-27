@@ -76,13 +76,12 @@ class Simplex:
 
         # Obtener los indices de las filas con A y H
         a_row = [i for i, p in enumerate(self.basic_variables) if "A" in p]
-        h_row = [i for i, p in enumerate(self.basic_variables) if "H" in p]
 
         # obener los valores de ecuacion header
-        h_colum_value_coef = [p[1] for i, p in enumerate(self.header) if "H" in p]
+        h_colum_value_coef = [p[1:] for i, p in enumerate(self.header) if "H" in p]
 
         # Obtener los valores de ecuacion basic_variables
-        row_values_coef = [p[1] for i, p in enumerate(self.basic_variables[1:])]
+        row_values_coef = [p[1:] for i, p in enumerate(self.basic_variables[1:])]
 
         # Primera coincidiencia obligatoria donde A/A
         for i in a_row:
@@ -116,12 +115,9 @@ class Simplex:
             else:
                 self.matrix[0, :, 0] += self.matrix[i, :, 1] * (-1)
 
-        a = self.matrix[0, :-1, 0]
-        b = self.matrix[0, :-1, 1]
-
         if self.opts == 0:
-            # return iterations, [("TT", 0)]
-            while np.any(a > 0) or (np.all(a == 0) and np.any(b > 0)):
+            pares = list(zip(self.matrix[0, :-1, 0], self.matrix[0, :-1, 1]))
+            while max(pares) > (0, 0):
                 # Variable de entrada
                 values_m = self.matrix[0, :-1, 0]
                 values_co = self.matrix[0, :-1, 1]
@@ -133,8 +129,8 @@ class Simplex:
                     if len(index_min_colum_co) == 1:
                         index_min_colum = index_min_colum_co[0]
                     else:
-                        index_min_colum = where(values_co > 0)[0][
-                            values_co[values_co > 0].argmax()
+                        index_min_colum = where((values_co > 0) & (values_m == 0))[0][
+                            values_co[(values_co > 0) & (values_m == 0)].argmax()
                         ]
                 else:
                     if len(index_min_colum) == 1:
@@ -181,11 +177,12 @@ class Simplex:
                             )
 
                 iterations += 1
-                if iterations >= 100:
-                    return iterations, [("TT", 0)]
+                if iterations >= 1000:
+                    break
+                pares = list(zip(self.matrix[0, :-1, 0], self.matrix[0, :-1, 1]))
         else:
-            # return iterations, [("TT", 0)]
-            while np.any(a < 0) or (np.all(a == 0) and np.any(b < 0)):
+            pares = list(zip(self.matrix[0, :-1, 0], self.matrix[0, :-1, 1]))
+            while min(pares) < (0, 0):
                 # Variable de entrada
                 values_m = self.matrix[0, :-1, 0]
                 values_co = self.matrix[0, :-1, 1]
@@ -197,15 +194,15 @@ class Simplex:
                     if len(index_min_colum_co) == 1:
                         index_min_colum = index_min_colum_co[0]
                     else:
-                        index_min_colum = where(values_co < 0)[0][
-                            values_co[values_co > 0].argmin()
+                        index_min_colum = where((values_co < 0) & (values_m == 0))[0][
+                            values_co[(values_co < 0) & (values_m == 0)].argmin()
                         ]
                 else:
                     if len(index_min_colum) == 1:
                         index_min_colum = index_min_colum[0]
                     else:
                         index_min_colum = where(values_m < 0)[0][
-                            values_m[values_m > 0].argmin()
+                            values_co[values_m < 0].argmin()
                         ]
 
                 # Variable de Salida
@@ -219,7 +216,6 @@ class Simplex:
 
                 # Correcion basic_variables
                 self.basic_variables[index_min_row + 1] = self.header[index_min_colum]
-
                 # Dividir la fila
                 self.matrix[index_min_row + 1, :, 1] /= self.matrix[
                     index_min_row + 1, index_min_colum, 1
@@ -245,8 +241,9 @@ class Simplex:
                             )
 
                 iterations += 1
-                if iterations >= 100:
-                    return iterations, [("TT", 0)]
+                if iterations >= 1000:
+                    break
+                pares = list(zip(self.matrix[0, :-1, 0], self.matrix[0, :-1, 1]))
 
         index_x = [(i, p) for i, p in enumerate(self.basic_variables) if "X" in p]
         solutions = [(p, self.matrix[i, -1, 1]) for i, p in index_x]

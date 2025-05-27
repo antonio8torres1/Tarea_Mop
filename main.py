@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 from streamlit import (
     session_state,
     container,
@@ -58,8 +59,8 @@ with container():
         session_state.config["target"] = selectbox(
             "Escoja una opcion:", session_state.config["options"]
         )
-        variables = int(selectbox("Numero de Varibles: ", list(range(1, 20))))
-        equations = int(selectbox("Numero de Restricciones: ", list(range(1, 20))))
+        variables = int(selectbox("Numero de Varibles: ", list(range(1, 30))))
+        equations = int(selectbox("Numero de Restricciones: ", list(range(1, 30))))
 
         session_state.config["num_variables"] = variables
         session_state.config["num_equations"] = equations
@@ -87,8 +88,6 @@ with container():
 
 with container():
     if button("Resolver"):
-        #   session_state.config_table["state"] = True
-        # if session_state.config_table["state"]:
         session_state.config_table["table"].clear()
         opt_list = []
 
@@ -131,6 +130,32 @@ with container():
         table = Simplex(row, colum, opts=target)
 
         table.initialize(session_state.config_table["table"], header, vb)
+        write("### Tabla inicial")
+        data, tabl = table.table_pandas()
+        st.dataframe(data)
+
+        write("### Solucion")
+        n, s = table.solve()
+        write("#### Numero de iteraciones: ", n)
+
+        for p, v in s:
+            write(" ##### ", p, " : ", round(v, 2))
+
+        write("### Iteracion final")
+        data, tabl = table.table_pandas()
+        st.dataframe(data)
+        session_state.config_table["state"] = False
+
+    if st.button("EJEMPLO"):
+        data = pd.read_csv("data/data.csv", header=None)
+
+        vb = pd.read_csv("data/vb.csv", header=None).to_numpy()
+        hd = pd.read_csv("data/hd.csv", header=None).to_numpy()
+
+        data_table = data.to_numpy()
+        table = Simplex(len(vb[0]), len(hd[0]) + 1, 1)
+
+        table.initialize(data_table, hd[0], vb[0])
 
         write("### Tabla inicial")
         data, tabl = table.table_pandas()
