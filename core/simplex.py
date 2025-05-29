@@ -137,7 +137,7 @@ class Simplex:
                         index_min_colum = index_min_colum[0]
                     else:
                         index_min_colum = where(values_m > 0)[0][
-                            values_m[values_m > 0].argmax()
+                            values_co[values_m > 0].argmax()
                         ]
 
                 # Variable de Salida

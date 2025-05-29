@@ -141,6 +141,11 @@ with container():
         for p, v in s:
             write(" ##### ", p, " : ", round(v, 2))
 
+        if table.opts == 1:
+            write("#### MAX Z = ", round(table.matrix[0, -1, 1], 3))
+        else:
+            write("#### MIN Z = ", round(table.matrix[0, -1, 1], 3))
+
         write("### Iteracion final")
         data, tabl = table.table_pandas()
         st.dataframe(data)
@@ -167,6 +172,11 @@ with container():
 
         for p, v in s:
             write(" ##### ", p, " : ", round(v, 2))
+
+        if table.opts == 1:
+            write("#### MAX Z = ", round(table.matrix[0, -1, 1], 3))
+        else:
+            write("#### MIN Z = ", round(table.matrix[0, -1, 1], 3))
 
         write("### Iteracion final")
         data, tabl = table.table_pandas()
